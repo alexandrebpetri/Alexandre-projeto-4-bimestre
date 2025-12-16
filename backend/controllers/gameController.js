@@ -47,37 +47,90 @@ async function getGame(req, res) {
 
 // Criar novo jogo (aceita id opcional)
 async function createGame(req, res) {
+  const client = await pool.connect();
   try {
-    const { id, name, description, price, release_date, developer_id, categories } = req.body;
+    // DEBUG: log do corpo e headers para diagnosticar payload vindo do frontend
+    console.log('DEBUG createGame - headers:', req.headers && { 'content-type': req.headers['content-type'] });
+    console.log('DEBUG createGame - body (raw):', req.body);
 
-    if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
-
-    if (id !== undefined && id !== null) {
-      const exists = await pool.query('SELECT id FROM games WHERE id=$1', [id]);
-      if (exists.rowCount > 0) return res.status(409).json({ error: 'Jogo com esse ID já existe' });
+    // Normaliza e valida entrada
+    const rawId = req.body.id;
+    let id;
+    if (rawId === undefined || rawId === null || String(rawId).trim() === '') {
+      id = undefined;
+    } else {
+      // tenta converter para número inteiro
+      const parsed = Number(rawId);
+      if (Number.isNaN(parsed) || !Number.isInteger(parsed)) {
+        client.release();
+        return res.status(400).json({ error: 'ID inválido' });
+      }
+      id = parsed;
     }
 
-    const result = await pool.query(
-      `INSERT INTO games (id, name, description, price, release_date, developer_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [id, name, description, price, release_date, developer_id]
-    );
-    const game = result.rows[0];
+    const { name, description, price, release_date, developer_id, categories } = req.body;
 
-    if (Array.isArray(categories) && categories.length > 0) {
-      // verifica se as categorias existem antes de inserir
-      for (const catId of categories) {
-        const c = await pool.query('SELECT id FROM category WHERE id=$1', [catId]);
-        if (c.rowCount === 0) continue; // ignora categorias inexistentes
-        await pool.query('INSERT INTO game_category (game_id, category_id) VALUES ($1,$2)', [game.id, catId]);
+    if (!name) {
+      client.release();
+      return res.status(400).json({ error: 'Nome é obrigatório' });
+    }
+
+    await client.query('BEGIN');
+
+    // se id foi fornecido, verifica existência
+    if (id !== undefined) {
+      const exists = await client.query('SELECT id FROM games WHERE id=$1', [id]);
+      if (exists.rowCount > 0) {
+        await client.query('ROLLBACK');
+        client.release();
+        return res.status(409).json({ error: 'Jogo com esse ID já existe' });
       }
     }
 
-    res.status(201).json(game);
+    // Inserção — se id estiver ausente, insere sem a coluna id para usar DEFAULT
+    let result;
+    if (id !== undefined && id !== null) {
+      result = await client.query(
+        `INSERT INTO games (id, name, description, price, release_date, developer_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [id, name, description, price, release_date, developer_id]
+      );
+    } else {
+      result = await client.query(
+        `INSERT INTO games (name, description, price, release_date, developer_id)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [name, description, price, release_date, developer_id]
+      );
+    }
+    const game = result.rows[0];
+
+    // Inserir categorias: deduplicar e usar ON CONFLICT para evitar erro de PK duplicada
+    if (Array.isArray(categories) && categories.length > 0) {
+      const uniqueCats = Array.from(new Set(categories.map(x => Number(x)).filter(n => !Number.isNaN(n))));
+      for (const catId of uniqueCats) {
+        const c = await client.query('SELECT id FROM category WHERE id=$1', [catId]);
+        if (c.rowCount === 0) continue; // ignora categorias inexistentes
+        await client.query(
+          'INSERT INTO game_category (game_id, category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [game.id, catId]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    client.release();
+    return res.status(201).json(game);
   } catch (err) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (e) {
+      // ignore rollback error
+    }
+    client.release();
     console.error(err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 }
 

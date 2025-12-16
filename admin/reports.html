@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Relatórios</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <div class="logo-container">
+      <img src="/./assets/JH-Logo.png" alt="Logo Jurassic Hub" class="admin-logo">
+      <h1>Jurassic Hub <span>Relatórios</span></h1>
+    </div>
+  </header>
+
+  <main class="admin-dashboard reports-dashboard">
+    <section class="report-card">
+      <h2>Jogos Mais Vendidos</h2>
+      <div class="report-actions">
+        <button id="refresh-sales" class="btn primary">Atualizar</button>
+        <button id="print-sales" class="btn secondary">Imprimir</button>
+      </div>
+      <div id="sales-loading" class="muted">Carregando...</div>
+      <table id="sales-table" class="report-table" style="display:none">
+        <thead>
+          <tr><th>Posição</th><th>Jogo</th><th>Vendas</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="report-card">
+      <h2>Lucro por Jogo</h2>
+      <div class="report-actions">
+        <button id="refresh-profit" class="btn primary">Atualizar</button>
+        <button id="print-profit" class="btn secondary">Imprimir</button>
+      </div>
+      <div id="profit-loading" class="muted">Carregando...</div>
+      <table id="profit-table" class="report-table" style="display:none">
+        <thead>
+          <tr><th>Jogo</th><th>Vendas</th><th>Preço Unit.</th><th>Lucro Total</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="reports.js"></script>
+</body>
+</html>
