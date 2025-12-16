@@ -9,7 +9,7 @@ function loadGames(list = games, ownedIds = new Set()) {
   for (let i = 0; i < list.length; i++) {
     const game = list[i];
     let priceDisplay = game.price === 0 ? "Grátis" : `R$ ${game.price.toFixed(2)}`;
-    if (ownedIds.has(game.id)) priceDisplay = 'Adquirido';
+    if (ownedIds.has(Number(game.id))) priceDisplay = 'Obtido';
 
     const card = document.createElement("div");
     card.className = "game-card";

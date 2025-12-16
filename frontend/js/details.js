@@ -59,8 +59,8 @@ function loadDetails() {
       // Se o jogo já estiver na biblioteca, altera o botão para redirecionar
       (async () => {
         const owned = await getUserLibraryIds();
-        if (owned.has(game.id)) {
-          CartButton.textContent = 'Ver na biblioteca';
+        if (owned.has(Number(game.id))) {
+          CartButton.textContent = 'Mostrar na biblioteca';
           CartButton.onclick = () => { window.location.href = 'library.html'; };
         } else {
           CartButton.addEventListener('click', () => AddToCart(game));
