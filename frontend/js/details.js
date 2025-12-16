@@ -23,10 +23,20 @@ function formatDate(dateStr) {
 
 function loadDetails() {
   const urlParams = new URLSearchParams(window.location.search);
-  const id = parseInt(urlParams.get('id'), 10);
+  let id = parseInt(urlParams.get('id'), 10);
   const gamesContainer = document.getElementById('gamesContainer');
 
   loadGamesFromAPI().then(() => {
+    // Fallback: se id não estiver na query, tentar lastViewedGameId do localStorage
+    if (isNaN(id)) {
+      try {
+        const last = localStorage.getItem('lastViewedGameId');
+        if (last) id = parseInt(last, 10);
+      } catch (e) {
+        /* noop */
+      }
+    }
+
     const game = games.find(j => j.id === id);
     if (game) {
       gamesContainer.innerHTML = `
@@ -57,7 +67,12 @@ function loadDetails() {
         }
       })();
     } else {
-      gamesContainer.innerHTML = '<div class="not-found">Jogo não encontrado!</div>';
+      gamesContainer.innerHTML = `
+        <div class="not-found">
+          <p>Jogo não encontrado!</p>
+          <p><a href="index.html">Voltar para a loja</a> ou <a href="library.html">ver sua biblioteca</a>.</p>
+        </div>
+      `;
     }
   });
 }

@@ -35,8 +35,11 @@ function createCard(item) {
   // Card no mesmo formato da index (classe game-card)
   const card = document.createElement('div');
   card.className = 'game-card';
-  // Ao clicar no card, ir para a página de detalhes
-  card.onclick = () => { window.location.href = `details.html?id=${item.id}`; };
+  // Ao clicar no card, salvar último jogo visualizado e ir para a página de detalhes
+  card.onclick = () => {
+    try { localStorage.setItem('lastViewedGameId', String(item.id)); } catch (e) { /* noop */ }
+    window.location.href = `details.html?id=${item.id}`;
+  };
 
   const imgSrc = item.image ? item.image : '../assets/no-image.png';
   card.innerHTML = `

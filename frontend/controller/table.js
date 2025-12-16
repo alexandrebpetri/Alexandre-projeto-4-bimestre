@@ -1,6 +1,7 @@
 export class Game {
     constructor({ id, name, description, price, release_date, categories, category, developer, image }) {
-        this.id = id;
+        // Garantir que id seja numérico para comparações confiáveis
+        this.id = typeof id === 'number' ? id : (id ? Number(id) : null);
         this.name = name;
         this.description = description;
         this.price = typeof price === 'number' ? price : parseFloat(price) || 0;
