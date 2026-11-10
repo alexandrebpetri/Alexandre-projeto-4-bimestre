@@ -1,4 +1,4 @@
-# Projeto: Alexandre - Projeto 3º Bimestre
+# Projeto: Alexandre - Projeto 4º Bimestre
 
 Resumo do repositório de um sistema simples para gerenciamento de jogos, desenvolvedores, categorias e biblioteca de usuários. Backend em Node.js/Express com PostgreSQL; frontend composto por páginas estáticas em HTML/CSS/JS.
 
